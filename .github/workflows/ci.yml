@@ -1,0 +1,24 @@
+name: Terraform CI
+
+on:
+  push:
+    branches: [develop, homolog, main]
+  pull_request:
+    branches: [develop, homolog, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
+
