@@ -1,0 +1,51 @@
+name: Provision Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        options: [hml, prod]
+
+permissions: { contents: read }
+concurrency: { group: oficina-database-${{ inputs.environment }}, cancel-in-progress: false }
+
+jobs:
+  deploy:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      TF_VAR_environment: ${{ inputs.environment }}
+      TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
+      TF_VAR_private_subnet_ids: ${{ secrets.PRIVATE_SUBNET_IDS_JSON }}
+      TF_VAR_allowed_security_group_ids: ${{ secrets.DATABASE_CALLER_SECURITY_GROUP_IDS_JSON }}
+      TF_VAR_rds_ca_pem: ${{ secrets.RDS_CA_PEM }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.6.6 }
+      - name: Plan and controlled apply
+        run: |
+          terraform init -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" -backend-config="key=database/${{ inputs.environment }}/terraform.tfstate" -backend-config="region=${AWS_REGION}" -backend-config="dynamodb_table=${{ secrets.TF_STATE_LOCK_TABLE }}" -backend-config="encrypt=true"
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+          terraform output -json > deployment-outputs.json
+      - name: Validate RDS availability and secret
+        run: |
+          DB_ID=$(terraform output -raw database_instance_identifier)
+          SECRET_ARN=$(terraform output -raw database_secret_arn)
+          aws rds wait db-instance-available --db-instance-identifier "$DB_ID"
+          aws rds describe-db-instances --db-instance-identifier "$DB_ID" --query 'DBInstances[0].{Status:DBInstanceStatus,Public:PubliclyAccessible,Encrypted:StorageEncrypted}'
+          aws secretsmanager describe-secret --secret-id "$SECRET_ARN" --query '{ARN:ARN,LastChangedDate:LastChangedDate}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-outputs-${{ inputs.environment }}-${{ github.sha }}
+          path: deployment-outputs.json
