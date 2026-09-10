@@ -18,6 +18,25 @@ Infraestrutura Terraform independente para o Amazon RDS for PostgreSQL.
 - `production`: instância e backups independentes, proteção contra exclusão;
 - Multi-AZ documentado como evolução para produção corporativa.
 
+## Recursos provisionados
+
+- RDS PostgreSQL privado e criptografado em repouso;
+- `rds.force_ssl=1` para exigir TLS em transito;
+- entrada em `5432` exclusivamente por security groups do EKS e da Lambda;
+- credencial aleatoria no Secrets Manager;
+- backups de 1 dia em `hml` e 7 dias em `prod`;
+- protecao contra exclusao e snapshot final em `prod`;
+- logs, Performance Insights e alarmes CloudWatch;
+- autoscaling de armazenamento.
+
+Os exemplos ficam em `environments/`. Os IDs de rede virao dos outputs da
+infraestrutura Kubernetes. O bundle CA oficial do RDS deve ser injetado como
+variavel sensivel e nunca commitado. O state tambem contem material sensivel e
+devera usar backend remoto criptografado quando permitido pelo Learner Lab.
+
+As migrations serao executadas por Job Kubernetes controlado, conforme
+`docs/migrations.md`. O `postgres.yaml` permanece exclusivamente local.
+
 ## Arquitetura
 
 ```mermaid
