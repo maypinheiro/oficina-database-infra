@@ -14,9 +14,15 @@ Infraestrutura Terraform independente para o Amazon RDS for PostgreSQL.
 
 ## Ambientes
 
+- ambos ficam na conta AWS Academy Learner Lab `982623100545`;
 - `homolog`: Single-AZ, dados sintéticos e retenção reduzida;
 - `production`: instância e backups independentes, proteção contra exclusão;
 - Multi-AZ documentado como evolução para produção corporativa.
+
+O uso de duas instâncias depende de saldo, quotas e classes liberadas pelo
+laboratório. Secrets Manager, RDS e permissões IAM serão testados antes do
+primeiro apply. Se Budgets não estiver disponível, o saldo será conferido
+manualmente no início e no fim de cada sessão.
 
 ## Recursos provisionados
 
@@ -53,4 +59,3 @@ flowchart LR
 
 O código de provisionamento será criado na etapa de banco gerenciado. Nenhuma
 credencial ou estado Terraform deve ser versionado.
-
