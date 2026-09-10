@@ -50,8 +50,9 @@ variable "master_username" {
 }
 
 variable "engine_version" {
-  type    = string
-  default = "16.4"
+  type        = string
+  description = "Versao major do PostgreSQL; a AWS seleciona um minor disponivel na regiao."
+  default     = "16"
 }
 
 variable "instance_class" {
