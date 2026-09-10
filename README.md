@@ -1,56 +1,72 @@
 # Oficina Database Infrastructure
 
-Infraestrutura Terraform independente para o Amazon RDS for PostgreSQL.
-
-## Responsabilidades
-
-- DB subnet group em sub-redes privadas;
-- RDS PostgreSQL por ambiente;
-- Security Group aceitando 5432 apenas de EKS e Lambda;
-- criptografia, backup, retenção e proteção contra exclusão;
-- credenciais no AWS Secrets Manager;
-- outputs não sensíveis para integração;
-- alarmes operacionais e tags de custo.
-
-## Ambientes
-
-- `homolog`: Single-AZ, dados sintéticos e retenção reduzida;
-- `production`: instância e backups independentes, proteção contra exclusão;
-- Multi-AZ documentado como evolução para produção corporativa.
-
-## Recursos provisionados
-
-- RDS PostgreSQL privado e criptografado em repouso;
-- `rds.force_ssl=1` para exigir TLS em transito;
-- entrada em `5432` exclusivamente por security groups do EKS e da Lambda;
-- credencial aleatoria no Secrets Manager;
-- backups de 1 dia em `hml` e 7 dias em `prod`;
-- protecao contra exclusao e snapshot final em `prod`;
-- logs, Performance Insights e alarmes CloudWatch;
-- autoscaling de armazenamento.
-
-Os exemplos ficam em `environments/`. Os IDs de rede virao dos outputs da
-infraestrutura Kubernetes. O bundle CA oficial do RDS deve ser injetado como
-variavel sensivel e nunca commitado. O state tambem contem material sensivel e
-devera usar backend remoto criptografado quando permitido pelo Learner Lab.
-
-As migrations serao executadas por Job Kubernetes controlado, conforme
-`docs/migrations.md`. O `postgres.yaml` permanece exclusivamente local.
+Infraestrutura Terraform independente do Amazon RDS for PostgreSQL, incluindo rede de acesso, credenciais, backups e monitoramento.
 
 ## Arquitetura
 
 ```mermaid
 flowchart LR
-  Terraform["Terraform"] --> RDS["RDS PostgreSQL"]
-  Terraform --> SG["Security Groups"]
-  Terraform --> Secret["Secrets Manager"]
+  TF["Terraform"] --> RDS["RDS PostgreSQL privado"]
+  TF --> SG["Security Group 5432"]
+  TF --> Secret["AWS Secrets Manager"]
   Lambda["Lambda Auth"] --> SG
-  EKS["EKS"] --> SG
+  EKS["Oficina API / EKS"] --> SG
   SG --> RDS
   Secret --> Lambda
   Secret --> EKS
+  RDS --> CW["CloudWatch / alarmes"]
 ```
 
-O código de provisionamento será criado na etapa de banco gerenciado. Nenhuma
-credencial ou estado Terraform deve ser versionado.
+Relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
 
+## Tecnologias
+
+Terraform, Amazon RDS PostgreSQL, DB Subnet Group, Security Groups, Secrets Manager, CloudWatch, Performance Insights, S3/DynamoDB para state e GitHub Actions.
+
+## Pré-requisitos
+
+- Terraform 1.6+ e AWS CLI;
+- VPC, sub-redes privadas e security groups de EKS/Lambda;
+- sessão ativa da conta Academy `982623100545`.
+
+## Execução local e validação
+
+Este repositório provisiona cloud; localmente executa somente validação:
+
+```bash
+terraform fmt -check -recursive
+terraform init -backend=false
+terraform validate
+```
+
+Para um plan real, copie o exemplo do ambiente, preencha IDs não sensíveis e configure as credenciais temporárias fora do Git.
+
+## Variáveis e secrets
+
+Exemplos: `environments/hml.tfvars.example` e `prod.tfvars.example`. O CD requer `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `TF_STATE_BUCKET`, `TF_STATE_LOCK_TABLE`, `VPC_ID`, `PRIVATE_SUBNET_IDS_JSON`, `DATABASE_CALLER_SECURITY_GROUP_IDS_JSON` e `RDS_CA_PEM`.
+
+## Ambientes
+
+- `hml`: Single-AZ, dados sintéticos, backup por 1 dia;
+- `prod`: instância independente, backup por 7 dias, proteção contra exclusão e snapshot final;
+- Multi-AZ permanece evolução condicionada ao orçamento acadêmico.
+
+## CI/CD e deploy
+
+CI executa `terraform fmt`, init sem backend, validate, tfsec e SonarCloud. CD manual usa GitHub Environment `hml` ou `prod`, backend remoto criptografado, plan e apply. Provisionar depois da rede/EKS e antes das Functions/API.
+
+## Rollback e migrations
+
+Infraestrutura é corrigida por novo plan revisado; nunca editar state ou apagar banco como rollback. Antes de mudança destrutiva, gerar snapshot. Migrations são executadas pelo Job Kubernetes da API e seguem [migrations](docs/migrations.md); rollback de imagem não reverte schema.
+
+## Outputs
+
+Endpoint, porta, nome do banco, ARN do secret e security group são publicados para os pipelines consumidores. Senha e conteúdo do secret nunca são outputs abertos.
+
+## Observabilidade
+
+CloudWatch, logs PostgreSQL, Performance Insights e alarmes acompanham CPU, storage livre e conexões. Datadog consome os sinais conforme a infraestrutura de observabilidade.
+
+## Ambiente ativo e limitações
+
+Banco ativo: **não publicado nesta etapa**. Classes, RDS, Secrets Manager, Performance Insights e IAM precisam ser validados em uma sessão real do Learner Lab. O state e o bundle CA são sensíveis e não são versionados.
