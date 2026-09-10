@@ -1,0 +1,8 @@
+environment                = "hml"
+vpc_id                     = "vpc-substituir"
+private_subnet_ids          = ["subnet-privada-a", "subnet-privada-b"]
+allowed_security_group_ids = ["sg-eks-hml", "sg-lambda-hml"]
+instance_class             = "db.t3.micro"
+allocated_storage_gib      = 20
+max_allocated_storage_gib  = 30
+rds_ca_pem                 = "SUBSTITUIR_PELO_BUNDLE_CA_OFICIAL_DO_RDS"
