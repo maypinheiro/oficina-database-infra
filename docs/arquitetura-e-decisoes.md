@@ -100,3 +100,18 @@ CPU, memória, storage livre, conexões, latência e erros do mecanismo são aco
 ## Evidência de integração
 
 O RDS foi validado com TLS pela Lambda de autenticação e pela API no EKS. O fluxo E2E correspondente está registrado em <https://github.com/maypinheiro/oficina-auth-function/actions/runs/34617351925>.
+
+## Rastreabilidade para avaliação
+
+| Requisito | Implementação |
+|---|---|
+| Banco gerenciado | `main.tf` (`aws_db_instance`) |
+| Banco privado | `publicly_accessible = false`, subnet group e Security Group em `main.tf` |
+| Criptografia/credencial | KMS nativo do RDS e Secrets Manager em `main.tf` |
+| Backups/proteção | Variáveis por ambiente e lifecycle do RDS |
+| Monitoramento | `monitoring.tf` |
+| Outputs seguros | `outputs.tf` sem senha |
+| Migrations | Job da API e `docs/migrations.md` |
+| CI/CD | `.github/workflows/ci.yml` e `cd.yml` |
+
+Justificativa relacional e diagrama ER: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/modelo-dados.md>. Matriz completa: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md>.
