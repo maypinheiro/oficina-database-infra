@@ -69,7 +69,7 @@ CI valida formatação, Terraform, segurança e qualidade. CD aplica o banco dep
 4. Revise o plan; o workflow aplica, aguarda `available` e comprova banco privado/criptografado e existência do secret.
 5. Preserve `database-outputs-<env>-<sha>` para configurar API e Function.
 
-O provisionamento é funcional, mas seu gatilho ainda é manual; consulte a matriz de conformidade.
+O provisionamento é disparado automaticamente após CI verde: `homolog` utiliza `hml` e `main` utiliza `prod`. `workflow_dispatch` permanece como contingência, enquanto produção continua protegida pela aprovação do GitHub Environment; consulte a matriz de conformidade.
 
 ## Ambiente validado e limitações
 
