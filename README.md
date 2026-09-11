@@ -32,6 +32,8 @@ flowchart LR
 - [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
 - [RFC do PostgreSQL/RDS](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/rfc-002-postgresql-rds.md)
 - [Modelo de dados](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/modelo-dados.md)
+- [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
+- [Catálogo de evidências](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/catalogo-evidencias.md)
 
 Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
 
@@ -58,6 +60,16 @@ Um plan real requer os outputs de VPC/sub-redes/security groups e credenciais te
 ## CI/CD, migrations e rollback
 
 CI valida formatação, Terraform, segurança e qualidade. CD aplica o banco depois da rede/EKS e antes das Functions/API. Migrations pertencem à API e rodam em Job Kubernetes antes do rollout, usando estratégia expand/contract. Rollback de imagem não reverte schema; state nunca é editado manualmente.
+
+### Como executar o provisionamento
+
+1. Obtenha VPC, sub-redes privadas e Security Groups do artefato do EKS.
+2. Configure esses identificadores e o bundle CA oficial no GitHub Environment.
+3. Abra **Actions → Provision Database → Run workflow** e escolha `hml` ou `prod`.
+4. Revise o plan; o workflow aplica, aguarda `available` e comprova banco privado/criptografado e existência do secret.
+5. Preserve `database-outputs-<env>-<sha>` para configurar API e Function.
+
+O provisionamento é funcional, mas seu gatilho ainda é manual; consulte a matriz de conformidade.
 
 ## Ambiente validado e limitações
 
