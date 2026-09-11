@@ -73,7 +73,7 @@ O CD da API executa `prisma migrate deploy` em Job único antes do rollout. Muda
 
 ## CI/CD
 
-CI executa formatação, init sem backend, validate, segurança estática e qualidade. CD manual lê os outputs de rede, aplica Terraform com state remoto e publica um artefato de outputs não sensíveis.
+CI executa formatação, init sem backend, validate, segurança estática e qualidade. Após sucesso em `homolog`/`main`, o CD automático deriva `hml`/`prod`, faz checkout do SHA validado, lê os outputs de rede, aplica Terraform com state remoto e publica um artefato não sensível. `workflow_dispatch` permanece como contingência e `prod` mantém aprovação obrigatória.
 
 Ordem: plataforma EKS/rede, banco, API/migrations e autenticação. O banco não deve ser recriado durante deploy normal da aplicação.
 
