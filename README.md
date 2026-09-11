@@ -1,37 +1,45 @@
 # Oficina Database Infrastructure
 
-Infraestrutura Terraform independente do Amazon RDS for PostgreSQL, incluindo rede de acesso, credenciais, backups e monitoramento.
+Infraestrutura Terraform independente para o Amazon RDS for PostgreSQL, incluindo acesso privado, credenciais, backups e monitoramento.
 
-## Arquitetura
+## O que este repositório entrega
+
+- RDS PostgreSQL criptografado e sem endpoint público;
+- DB Subnet Group em sub-redes privadas de duas AZs;
+- Security Group restrito aos consumidores EKS/Lambda;
+- segredo de conexão no AWS Secrets Manager;
+- TLS com validação do bundle CA regional;
+- backups, proteção de produção e parâmetros por ambiente;
+- CloudWatch, logs do mecanismo, alarmes e Performance Insights;
+- Terraform com state remoto e pipeline CI/CD.
 
 ```mermaid
 flowchart LR
-  TF["Terraform"] --> RDS["RDS PostgreSQL privado"]
-  TF --> SG["Security Group 5432"]
-  TF --> Secret["AWS Secrets Manager"]
-  Lambda["Lambda Auth"] --> SG
-  EKS["Oficina API / EKS"] --> SG
-  SG --> RDS
+  API["Oficina API / EKS"] -->|"TLS 5432"| SG["Security Group RDS"]
+  Lambda["Lambda authenticate"] -->|"TLS 5432"| SG
+  Migration["Job prisma-migrate"] -->|"TLS 5432"| SG
+  SG --> RDS["RDS PostgreSQL privado"]
+  Secret["Secrets Manager"] --> API
   Secret --> Lambda
-  Secret --> EKS
-  RDS --> CW["CloudWatch / alarmes"]
+  RDS --> CW["CloudWatch / Performance Insights"]
 ```
 
-Relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
+## Documentação
+
+- [Arquitetura, objetivos, decisões e limitações](docs/arquitetura-e-decisoes.md)
+- [Estratégia de migrations](docs/migrations.md)
+- [Governança do repositório](docs/governanca-repositorio.md)
+- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
+- [RFC do PostgreSQL/RDS](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/rfc-002-postgresql-rds.md)
+- [Modelo de dados](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/modelo-dados.md)
+
+Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
 
 ## Tecnologias
 
-Terraform, Amazon RDS PostgreSQL, DB Subnet Group, Security Groups, Secrets Manager, CloudWatch, Performance Insights, S3/DynamoDB para state e GitHub Actions.
+Terraform, Amazon RDS PostgreSQL, Secrets Manager, CloudWatch, Performance Insights, S3/DynamoDB para state e GitHub Actions.
 
-## Pré-requisitos
-
-- Terraform 1.6+ e AWS CLI;
-- VPC, sub-redes privadas e security groups de EKS/Lambda;
-- sessão ativa da conta Academy `982623100545`.
-
-## Execução local e validação
-
-Este repositório provisiona cloud; localmente executa somente validação:
+## Validação local
 
 ```bash
 terraform fmt -check -recursive
@@ -39,34 +47,20 @@ terraform init -backend=false
 terraform validate
 ```
 
-Para um plan real, copie o exemplo do ambiente, preencha IDs não sensíveis e configure as credenciais temporárias fora do Git.
-
-## Variáveis e secrets
-
-Exemplos: `environments/hml.tfvars.example` e `prod.tfvars.example`. O CD requer `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `TF_STATE_BUCKET`, `TF_STATE_LOCK_TABLE`, `VPC_ID`, `PRIVATE_SUBNET_IDS_JSON`, `DATABASE_CALLER_SECURITY_GROUP_IDS_JSON` e `RDS_CA_PEM`.
+Um plan real requer os outputs de VPC/sub-redes/security groups e credenciais temporárias configuradas fora do Git.
 
 ## Ambientes
 
-- `hml`: Single-AZ, dados sintéticos, backup por 1 dia;
-- `prod`: instância independente, backup por 7 dias, proteção contra exclusão e snapshot final;
+- `hml`: dados sintéticos, Single-AZ e retenção curta de backup;
+- `prod`: state e banco independentes, backup ampliado, deletion protection e snapshot final;
 - Multi-AZ permanece evolução condicionada ao orçamento acadêmico.
 
-## CI/CD e deploy
+## CI/CD, migrations e rollback
 
-CI executa `terraform fmt`, init sem backend, validate, tfsec e SonarCloud. CD manual usa GitHub Environment `hml` ou `prod`, backend remoto criptografado, plan e apply. Provisionar depois da rede/EKS e antes das Functions/API.
+CI valida formatação, Terraform, segurança e qualidade. CD aplica o banco depois da rede/EKS e antes das Functions/API. Migrations pertencem à API e rodam em Job Kubernetes antes do rollout, usando estratégia expand/contract. Rollback de imagem não reverte schema; state nunca é editado manualmente.
 
-## Rollback e migrations
+## Ambiente validado e limitações
 
-Infraestrutura é corrigida por novo plan revisado; nunca editar state ou apagar banco como rollback. Antes de mudança destrutiva, gerar snapshot. Migrations são executadas pelo Job Kubernetes da API e seguem [migrations](docs/migrations.md); rollback de imagem não reverte schema.
+Conta acadêmica `982623100545`, região `us-east-1`. A integração do banco privado foi validada por Lambda e API no fluxo E2E: <https://github.com/maypinheiro/oficina-auth-function/actions/runs/34617351925>.
 
-## Outputs
-
-Endpoint, porta, nome do banco, ARN do secret e security group são publicados para os pipelines consumidores. Senha e conteúdo do secret nunca são outputs abertos.
-
-## Observabilidade
-
-CloudWatch, logs PostgreSQL, Performance Insights e alarmes acompanham CPU, storage livre e conexões. Datadog consome os sinais conforme a infraestrutura de observabilidade.
-
-## Ambiente ativo e limitações
-
-Banco ativo: **não publicado nesta etapa**. Classes, RDS, Secrets Manager, Performance Insights e IAM precisam ser validados em uma sessão real do Learner Lab. O state e o bundle CA são sensíveis e não são versionados.
+Classes, Multi-AZ e algumas políticas podem ser limitadas pela `LabRole`, quotas e saldo. Credenciais AWS expiram ao final da sessão. O endpoint privado não é acessível diretamente da internet.
