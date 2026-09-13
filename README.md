@@ -69,7 +69,7 @@ Um plan real requer os outputs de VPC/sub-redes/security groups e credenciais te
 
 CI valida formatação, Terraform, segurança e qualidade. CD aplica o banco depois da rede/EKS e antes das Functions/API. Migrations pertencem à API e rodam em Job Kubernetes antes do rollout, usando estratégia expand/contract. Rollback de imagem não reverte schema; state nunca é editado manualmente.
 
-### Como executar o provisionamento
+### Como executar o deploy e o provisionamento
 
 1. Obtenha VPC, sub-redes privadas e Security Groups do artefato do EKS.
 2. Configure esses identificadores e o bundle CA oficial no GitHub Environment.
@@ -77,7 +77,7 @@ CI valida formatação, Terraform, segurança e qualidade. CD aplica o banco dep
 4. Revise o plan; o workflow aplica, aguarda `available` e comprova banco privado/criptografado e existência do secret.
 5. Preserve `database-outputs-<env>-<sha>` para configurar API e Function.
 
-O provisionamento é disparado automaticamente após CI verde: `homolog` utiliza `hml` e `main` utiliza `prod`. `workflow_dispatch` permanece como contingência, enquanto produção continua protegida pela aprovação do GitHub Environment; consulte a matriz de conformidade.
+O deploy do provisionamento é disparado automaticamente após CI verde: `homolog` utiliza `hml` e `main` utiliza `prod`. `workflow_dispatch` permanece como contingência, enquanto produção continua protegida pela aprovação do GitHub Environment; consulte a matriz de conformidade.
 
 ## Ambiente validado e limitações
 
