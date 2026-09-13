@@ -29,13 +29,21 @@ flowchart LR
 - [Arquitetura, objetivos, decisões e limitações](docs/arquitetura-e-decisoes.md)
 - [Estratégia de migrations](docs/migrations.md)
 - [Governança do repositório](docs/governanca-repositorio.md)
-- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/entrega-tecnica.md)
-- [RFC do PostgreSQL/RDS](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/rfc-002-postgresql-rds.md)
-- [Modelo de dados](https://github.com/maypinheiro/oficina-api/blob/develop/docs/fase3/modelo-dados.md)
+- [Arquitetura integrada da solução](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-tecnica.md)
+- [RFC do PostgreSQL/RDS](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/rfc-002-postgresql-rds.md)
+- [Modelo de dados](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/modelo-dados.md)
 - [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
 - [Catálogo de evidências](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/catalogo-evidencias.md)
+- [Entrega final e vídeo](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-final.md)
 
 Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
+
+### API publicada e Swagger
+
+O RDS é privado e este repositório não expõe API própria. Os contratos da aplicação que consome o banco estão disponíveis em:
+
+- Swagger/OpenAPI: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs/>
+- URL base do API Gateway: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>
 
 ## Tecnologias
 
