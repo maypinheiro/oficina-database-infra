@@ -35,15 +35,29 @@ flowchart LR
 - [Matriz completa de conformidade](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md)
 - [Catálogo de evidências](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/catalogo-evidencias.md)
 - [Entrega final e vídeo](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/entrega-final.md)
+- [Arquitetura final da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/arquitetura-alvo.md)
+- [Ownership e isolamento dos bancos](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/ownership-dados.md)
+- [ADR da persistência NoSQL do Execution](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/adrs/adr-012-dynamodb-execution.md)
+- [Matriz de conformidade da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/matriz-conformidade.md)
+- [Catálogo de evidências da Fase 4](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/catalogo-evidencias.md)
 
-Repositórios relacionados: [API](https://github.com/maypinheiro/oficina-api), [autenticação](https://github.com/maypinheiro/oficina-auth-function) e [Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
+Repositórios relacionados: [OS Service](https://github.com/maypinheiro/oficina-api),
+[Billing Service](https://github.com/maypinheiro/oficina-billing-service),
+[Execution Service](https://github.com/maypinheiro/oficina-execution-service),
+[autenticação](https://github.com/maypinheiro/oficina-auth-function) e
+[Kubernetes](https://github.com/maypinheiro/oficina-k8s-infra).
+
+Na Fase 4, este repositório continua responsável pelo PostgreSQL do OS Service.
+O Billing provisiona seu RDS no próprio repositório e o Execution provisiona seu
+DynamoDB no próprio repositório. Não existe credencial, tabela, foreign key ou
+consulta compartilhada entre os três serviços.
 
 ### API publicada e Swagger
 
 O RDS é privado e este repositório não expõe API própria. Os contratos da aplicação que consome o banco estão disponíveis em:
 
-- Swagger/OpenAPI: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com/docs/>
-- URL base do API Gateway: <https://9o7vnq3io0.execute-api.us-east-1.amazonaws.com>
+- Swagger/OpenAPI: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com/docs/>
+- URL base do API Gateway: <https://1stuihvf8d.execute-api.us-east-1.amazonaws.com>
 
 ## Tecnologias
 
@@ -81,6 +95,9 @@ O deploy do provisionamento é disparado automaticamente após CI verde: `homolo
 
 ## Ambiente validado e limitações
 
-Conta acadêmica `982623100545`, região `us-east-1`. A integração do banco privado foi validada por Lambda e API no fluxo E2E: <https://github.com/maypinheiro/oficina-auth-function/actions/runs/34617351925>.
+Conta acadêmica atual `533267045718`, região `us-east-1`; contas anteriores do
+Learner Lab foram encerradas. A integração privada continua validada pela API no
+EKS; as evidências atuais da Fase 4 estão no
+[catálogo central](https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/catalogo-evidencias.md).
 
 Classes, Multi-AZ e algumas políticas podem ser limitadas pela `LabRole`, quotas e saldo. Credenciais AWS expiram ao final da sessão. O endpoint privado não é acessível diretamente da internet.
