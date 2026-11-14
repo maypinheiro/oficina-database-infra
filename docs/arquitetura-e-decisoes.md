@@ -91,7 +91,8 @@ CPU, memória, storage livre, conexões, latência e erros do mecanismo são aco
 
 ## Limitações do AWS Academy
 
-- Conta `982623100545`, região `us-east-1` e permissões da `LabRole`.
+- Conta atual `533267045718`, região `us-east-1` e permissões da `LabRole`;
+  contas anteriores foram substituídas pelo Learner Lab.
 - Algumas classes, versões e recursos como Multi-AZ podem estar indisponíveis ou exceder o orçamento.
 - Credenciais AWS do pipeline expiram com a sessão do laboratório.
 - O endpoint privado não pode ser testado diretamente da internet; validação ocorre por Lambda/EKS.
@@ -115,3 +116,14 @@ O RDS foi validado com TLS pela Lambda de autenticação e pela API no EKS. O fl
 | CI/CD | `.github/workflows/ci.yml` e `cd.yml` |
 
 Justificativa relacional e diagrama ER: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/modelo-dados.md>. Matriz completa: <https://github.com/maypinheiro/oficina-api/blob/main/docs/fase3/matriz-conformidade.md>.
+
+## Fronteira de dados na Fase 4
+
+Este state provisiona somente o PostgreSQL do OS Service. Billing possui RDS,
+usuário, secret, migrations e state no repositório `oficina-billing-service`;
+Execution possui DynamoDB e policy no repositório `oficina-execution-service`.
+A decisão evita que um deploy de banco recrie dados de outro domínio e atende à
+regra de nenhum acesso direto ao banco alheio.
+
+O mapa completo de ownership, projeções permitidas e acessos proibidos está em
+<https://github.com/maypinheiro/oficina-api/blob/main/docs/fase4/ownership-dados.md>.
